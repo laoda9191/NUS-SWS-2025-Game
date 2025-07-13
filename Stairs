@@ -9,8 +9,8 @@ set_dimensions([600, 600]);
 
 // 物理参数
 const GRAVITY = 2;
-const JUMP_FORCE = -30;
-const GROUND_LEVEL = 600;
+const JUMP_FORCE = -25;
+const GROUND_LEVEL = 500;
 
 // 初始玩家尺寸
 const PLAYER_WIDTH = 20;
@@ -19,19 +19,19 @@ const PLAYER_HEIGHT = 40;
 // 玩家移动速度
 const MOVEMENT_SPEED = 5;
 
-// 创建玩家矩形，初始位置 [50, GROUND_LEVEL]
+// 创建玩家矩形，初始位置 [50, GROUND_LEVEL - PLAYER_HEIGHT]
 const player = update_position(
     create_rectangle(PLAYER_WIDTH, PLAYER_HEIGHT), 
-    [50, GROUND_LEVEL]
+    [50,0]
 );
 
-// 创建地面（使用正确的两参数调用）
+// 创建地面
 const ground = update_position(
     create_rectangle(600, 20), 
-    [0, GROUND_LEVEL + 20]
+    [300, GROUND_LEVEL + 20]
 );
 
-// 创建阶梯（使用正确的两参数调用）
+// 创建阶梯
 const steps = [];
 const STEP_WIDTH = 100;
 const STEP_HEIGHT = 20;
@@ -67,10 +67,8 @@ let times = 0;
 
 // 主游戏循环
 update_loop(game_state => {
-    // 修复：使用stringify而不是String
     update_text(score_board, "Score: " + stringify(times));
     
-    // 玩家逻辑
     const playerPos = query_position(player);
 
     if (!alive) {
@@ -81,12 +79,12 @@ update_loop(game_state => {
     if (input_key_down("s") && isOnGround) {
         if (!isCrouching) {
             update_scale(player, [1, 0.5]);
-            playerPos[1] = playerPos[1] + (PLAYER_HEIGHT/2);
+            playerPos[1] = playerPos[1] + PLAYER_HEIGHT/2;
             isCrouching = true;
         }
     } else if (isCrouching) {
         update_scale(player, [1, 1]);
-        playerPos[1] = playerPos[1] - (PLAYER_HEIGHT/2);
+        playerPos[1] = playerPos[1] - PLAYER_HEIGHT/2;
         isCrouching = false;
     }
 
@@ -100,12 +98,12 @@ update_loop(game_state => {
     }
     
     // 限制玩家在屏幕内
-    if (playerPos[0] < 0) {
-        playerPos[0] = 0;
+    if (playerPos[0] - PLAYER_WIDTH/2 < 0) {
+        playerPos[0] = PLAYER_WIDTH/2;
     }
     
-    if (playerPos[0] > 600 - PLAYER_WIDTH) {
-        playerPos[0] = 600 - PLAYER_WIDTH;
+    if (playerPos[0] > 600 - PLAYER_WIDTH/2) {
+        playerPos[0] = 600 - PLAYER_WIDTH/2;
     }
 
     // 3. 跳跃控制
@@ -122,10 +120,12 @@ update_loop(game_state => {
     let wasOnGround = isOnGround;
     isOnGround = false;
     
+    // 当前玩家高度
+    const currentPlayerHeight = isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT;
+    
     // 检测地面碰撞
-    const playerBottom = playerPos[1] + (isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT);
-    if (playerBottom > GROUND_LEVEL) {
-        playerPos[1] = GROUND_LEVEL - (isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT);
+    if (playerPos[1] + currentPlayerHeight/2 > GROUND_LEVEL) {
+        playerPos[1] = GROUND_LEVEL-currentPlayerHeight/4;
         velocityY = 0;
         isOnGround = true;
     }
@@ -133,18 +133,18 @@ update_loop(game_state => {
     // 检测阶梯碰撞
     for (let i = 0; i < STEP_COUNT; i = i + 1) {
         const stepPos = query_position(steps[i]);
-        const stepTop = stepPos[1];
-        const stepLeft = stepPos[0];
-        const stepRight = stepPos[0] + STEP_WIDTH;
+        const stepTop = stepPos[1] - STEP_HEIGHT/2;
+        const stepLeft = stepPos[0] - STEP_WIDTH/2;
+        const stepRight = stepPos[0] + STEP_WIDTH/2;
         
-        // 检查玩家是否在阶梯上方且下落
+        // 检查玩家是否在阶梯上方且下落aaa
         if (velocityY > 0 
-            && playerPos[1] + (isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT) <= stepTop + 5 
-            && playerPos[1] + (isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT) + velocityY >= stepTop 
-            && playerPos[0] + PLAYER_WIDTH > stepLeft 
-            && playerPos[0] < stepRight) {
+            && playerPos[1] + currentPlayerHeight/2 <= stepTop + 5 
+            && playerPos[1] + currentPlayerHeight/2 + velocityY >= stepTop 
+            && playerPos[0] + PLAYER_WIDTH/2 > stepLeft 
+            && playerPos[0] - PLAYER_WIDTH/2 < stepRight) {
             
-            playerPos[1] = stepTop - (isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT);
+            playerPos[1] = stepTop - currentPlayerHeight/2;
             velocityY = 0;
             isOnGround = true;
             break;
