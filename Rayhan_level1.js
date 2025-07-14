@@ -36,10 +36,7 @@ let alive = true;
 let trapSequence = 0;
 let gameTime = 0;
 
-update_position(game_solids[0],[75,175]);
-objos_list[objos_list_size]=0;
-objos_list_size=objos_list_size+1;
-for(let i=1;i<6;i=i+1){
+for(let i=0;i<6;i=i+1){
     update_position(game_solids[i],[75+100*i,225]);
     objos_list[objos_list_size]=i;
     objos_list_size=objos_list_size+1;
@@ -192,14 +189,14 @@ update_loop(game_state => {
     
     //Above Spikes
     if(playerPos[0]>=300 && trapSequence===5){
-        for(let i=4;i<14;i=i+1){
+        for(let i=2;i<14;i=i+1){
             update_position(game_traps[i],[75+40*(i-2),264]);
         }
         gameTime=get_game_time();
         trapSequence=6;
     }
     if(trapSequence===6){
-        for(let i=4;i<14;i=i+1){
+        for(let i=2;i<14;i=i+1){
             if(get_game_time()-gameTime>=100*(i-2) && get_game_time()-gameTime<=100*(i-1)){
                 update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]+SPIKES_MOVE_SPEED]);
             }
@@ -217,7 +214,7 @@ update_loop(game_state => {
         trapSequence=9;
     }
     else if(trapSequence===8){
-         for(let i=4;i<14;i=i+1){
+         for(let i=2;i<14;i=i+1){
             update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]-SPIKES_MOVE_SPEED]);
         }
     }
@@ -235,6 +232,23 @@ update_loop(game_state => {
     }
     if(trapSequence===10 && query_position(door)[0]<=100){
         update_position(door,[query_position(door)[0]+SPIKES_MOVE_SPEED,305]);
+    }
+    if(trapSequence===10 && query_position(door)[0]>100){
+        trapSequence=11;
+        for(let i=1;i<7;i=i+1){
+            update_position(game_traps[i],[-500,-500]);
+        }
+    }
+    
+    //Changing Door, Floor, and Ceiling Position
+    if(trapSequence===11 && query_position(door)[0]>50 && playerPos[0]<175 && input_key_down("a")){
+        trapSequence=12;
+    }
+    if(trapSequence===12 && query_position(door)[0]>50){
+        update_position(door,[query_position(door)[0]-SPIKES_MOVE_SPEED,305]);
+        update_position(game_solids[6],[query_position(game_solids[6])[0]-SPIKES_MOVE_SPEED,375]);
+        update_position(game_solids[0],[75,query_position(game_solids[0])[1]-SPIKES_MOVE_SPEED*1.35]);
+        update_position(game_solids[1],[175,query_position(game_solids[1])[1]-SPIKES_MOVE_SPEED*1.35]);
     }
     //Getting Ready for next loop
     update_position(player, playerPos); // Still update after push
@@ -255,6 +269,9 @@ update_loop(game_state => {
         alive = false;
     }
     
+    debug_log("game_solids[0] pos: "+stringify(query_position(game_solids[0])));
+    debug_log("game_solids[6] pos: "+stringify(query_position(game_solids[6])));
+    debug_log("door position: "+stringify(query_position(door)));
    debug_log("player position:"+stringify(query_position(player)));
 });
 build_game();
