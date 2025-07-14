@@ -61,7 +61,7 @@ for(let i=18;i<24;i=i+1){
 }
 
 const door = update_position(create_rectangle(10, 40), [555, 305]);
-
+const transportDoor = update_position(create_rectangle(25, 25),[-500,-500]);
 update_loop(game_state => {
     
     if (!alive)
@@ -189,14 +189,14 @@ update_loop(game_state => {
     
     //Above Spikes
     if(playerPos[0]>=300 && trapSequence===5){
-        for(let i=2;i<14;i=i+1){
+        for(let i=2;i<13;i=i+1){
             update_position(game_traps[i],[75+40*(i-2),264]);
         }
         gameTime=get_game_time();
         trapSequence=6;
     }
     if(trapSequence===6){
-        for(let i=2;i<14;i=i+1){
+        for(let i=2;i<13;i=i+1){
             if(get_game_time()-gameTime>=100*(i-2) && get_game_time()-gameTime<=100*(i-1)){
                 update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]+SPIKES_MOVE_SPEED]);
             }
@@ -212,10 +212,16 @@ update_loop(game_state => {
     }
     if(trapSequence === 8 && get_game_time()-gameTime>100){
         trapSequence=9;
+        if(playerPos[0]<100){
+            update_position(transportDoor,[-500,-500]);
+        }
     }
     else if(trapSequence===8){
-         for(let i=2;i<14;i=i+1){
+         for(let i=2;i<13;i=i+1){
             update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]-SPIKES_MOVE_SPEED]);
+        }
+        if(query_position(game_traps[10])[1]!==265){
+            update_position(transportDoor,[520,300]);
         }
     }
     
@@ -241,7 +247,7 @@ update_loop(game_state => {
     }
     
     //Changing Door, Floor, and Ceiling Position
-    if(trapSequence===11 && query_position(door)[0]>50 && playerPos[0]<175 && input_key_down("a")){
+    if(trapSequence===11 && query_position(door)[0]>50 && playerPos[0]<165 && input_key_down("a")){
         trapSequence=12;
     }
     if(trapSequence===12 && query_position(door)[0]>50){
@@ -251,6 +257,12 @@ update_loop(game_state => {
         update_position(game_solids[1],[175,query_position(game_solids[1])[1]-SPIKES_MOVE_SPEED*1.35]);
     }
     //Getting Ready for next loop
+    if (gameobjects_overlap(player, transportDoor))
+    {
+        playerPos[0] = 70;
+        playerPos[1] = 300;
+    }
+    
     update_position(player, playerPos); // Still update after push
     if (tryjump) {
         tryjump=false;
