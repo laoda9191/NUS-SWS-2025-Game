@@ -190,7 +190,7 @@ update_loop(game_state => {
     //Above Spikes
     if(playerPos[0]>=300 && trapSequence===5){
         for(let i=2;i<14;i=i+1){
-            update_position(game_traps[i],[75+40*(i-2),265]);
+            update_position(game_traps[i],[75+40*(i-2),264]);
         }
         gameTime=get_game_time();
         trapSequence=6;
@@ -202,9 +202,34 @@ update_loop(game_state => {
             }
         }
     }
-    
+    if(trapSequence===6 && get_game_time()-gameTime>=1300){
+        trapSequence=7;
+    }
     //Transport Door
+    if(trapSequence===7){
+        gameTime=get_game_time();
+        trapSequence=8;
+    }
+    if(trapSequence === 8 && get_game_time()-gameTime>100){
+        trapSequence=9;
+    }
+    else if(trapSequence===8){
+         for(let i=2;i<14;i=i+1){
+            update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]-SPIKES_MOVE_SPEED]);
+        }
+    }
     
+    //Changing Door positiion
+    if(trapSequence===9 && query_position(door)[0]>=650){
+        update_position(door,[-50,305]);
+        trapSequence=10;
+    }    
+    else if(trapSequence===9 && playerPos[0]>500){
+        update_position(door,[query_position(door)[0]+SPIKES_MOVE_SPEED,305]);
+    }
+    if(trapSequence===10 && query_position(door)[0]<=100){
+        update_position(door,[query_position(door)[0]+SPIKES_MOVE_SPEED,305]);
+    }
     //Getting Ready for next loop
     update_position(player, playerPos); // Still update after push
     if (tryjump) {
