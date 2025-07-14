@@ -36,7 +36,10 @@ let alive = true;
 let trapSequence = 0;
 let gameTime = 0;
 
-for(let i=0;i<6;i=i+1){
+update_position(game_solids[0],[75,175]);
+objos_list[objos_list_size]=0;
+objos_list_size=objos_list_size+1;
+for(let i=1;i<6;i=i+1){
     update_position(game_solids[i],[75+100*i,225]);
     objos_list[objos_list_size]=i;
     objos_list_size=objos_list_size+1;
@@ -189,14 +192,14 @@ update_loop(game_state => {
     
     //Above Spikes
     if(playerPos[0]>=300 && trapSequence===5){
-        for(let i=2;i<14;i=i+1){
+        for(let i=4;i<14;i=i+1){
             update_position(game_traps[i],[75+40*(i-2),264]);
         }
         gameTime=get_game_time();
         trapSequence=6;
     }
     if(trapSequence===6){
-        for(let i=2;i<14;i=i+1){
+        for(let i=4;i<14;i=i+1){
             if(get_game_time()-gameTime>=100*(i-2) && get_game_time()-gameTime<=100*(i-1)){
                 update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]+SPIKES_MOVE_SPEED]);
             }
@@ -214,7 +217,7 @@ update_loop(game_state => {
         trapSequence=9;
     }
     else if(trapSequence===8){
-         for(let i=2;i<14;i=i+1){
+         for(let i=4;i<14;i=i+1){
             update_position(game_traps[i],[query_position(game_traps[i])[0],query_position(game_traps[i])[1]-SPIKES_MOVE_SPEED]);
         }
     }
@@ -225,6 +228,9 @@ update_loop(game_state => {
         trapSequence=10;
     }    
     else if(trapSequence===9 && playerPos[0]>500){
+        update_position(door,[query_position(door)[0]+SPIKES_MOVE_SPEED,305]);
+    }
+    else if(trapSequence===9 && query_position(door)[0]!==555){
         update_position(door,[query_position(door)[0]+SPIKES_MOVE_SPEED,305]);
     }
     if(trapSequence===10 && query_position(door)[0]<=100){
