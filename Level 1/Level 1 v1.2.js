@@ -8,15 +8,53 @@ const PLAYER_WIDTH = 20;
 const PLAYER_HEIGHT = 40;
 
 const PLAYER_MOVE_SPEED = 5;
-const player = update_position(create_rectangle(PLAYER_WIDTH, PLAYER_HEIGHT), [70, 300]);
+//const player = update_position(create_rectangle(PLAYER_WIDTH, PLAYER_HEIGHT), [70, 300]);
+const player_scale = [0.7, 0.5];
+const player_frames = [
+  update_scale(create_sprite("https://raw.githubusercontent.com/Staruto/NUS-SWS-2025-Game/refs/heads/main/Assets/Static_Player.png"), player_scale),
+  update_scale(create_sprite("https://raw.githubusercontent.com/Staruto/NUS-SWS-2025-Game/refs/heads/main/Assets/Dynamic_Player1.png"), player_scale),
+  update_scale(create_sprite("https://raw.githubusercontent.com/Staruto/NUS-SWS-2025-Game/refs/heads/main/Assets/Dynamic_Player2.png"), player_scale),
+  update_scale(create_sprite("https://raw.githubusercontent.com/Staruto/NUS-SWS-2025-Game/refs/heads/main/Assets/Dynamic_Player3.png"), player_scale)
+];
+
+let player_frame_index = 0;
+//let player_pos = [70, 300];
+let facing_left = false;
+let current_player = update_position(player_frames[0], [70, 300]);
+
+// Hide player sprites in current frame
+function hide_all_frames(frames) {
+  for (let i = 0; i < array_length(frames); i = i + 1) {
+    update_position(frames[i], [9999, 9999]);
+  }
+}
+
+// update the sprite of player by hide other sprites
+function update_sprite(frames, index, pos) {
+  hide_all_frames(frames);
+  current_player = update_position(frames[index], pos);
+  return frames[index];             
+}
+
+
+function set_sprite_direction(frames, face_left) {
+  const scale = face_left ? [-player_scale[0], player_scale[1]] : player_scale;
+  for (let i = 0; i < array_length(frames); i = i + 1) {
+    update_scale(frames[i], scale);
+  }
+}
+
+let frame_counter = 0;
+const FRAME_DELAY = 3;
 
 const game_solids = [];
-for(let i = 0;i < 24;i = i + 1){
+for (let i = 0; i < 24; i = i + 1){
     game_solids[i] = update_color(create_rectangle(100, 100), [255, 150, 0, 255]);
 }
 
-const game_traps=[];
-for(let i=0;i<20;i=i+1){
+const game_traps = [];
+for (let i = 0; i < 20; i = i + 1)
+{
     game_traps[i] = update_position(create_sprite("https://raw.githubusercontent.com/Staruto/NUS-SWS-2025-Game/refs/heads/main/Assets/Spikes1.png"), [-500, -500]);
 }
 
@@ -44,7 +82,7 @@ for(let i = 0; i < 6; i = i + 1){
     objos_list_size = objos_list_size + 1;
 }
 
-for(let i = 6;i < 12;i = i + 1){
+for(let i = 6; i < 12; i = i + 1){
     update_position(game_solids[i], [75 + 100 * (i - 6), 375]);
     objos_list[objos_list_size] = i;
     objos_list_size = objos_list_size + 1;
@@ -52,8 +90,8 @@ for(let i = 6;i < 12;i = i + 1){
 
 for(let i = 12; i < 18; i = i + 1){
     update_position(game_solids[i], [-25, 50 + 100 * (i - 12)]);
-    objos_list[objos_list_size]=i;
-    objos_list_size=objos_list_size+1;
+    objos_list[objos_list_size] = i;
+    objos_list_size = objos_list_size + 1;
 }
 
 for(let i = 18; i < 24; i = i + 1){
@@ -71,13 +109,39 @@ update_loop(game_state => {
         return undefined;
     }
     
-    //Player jump
-   const playerPos = query_position(player);
+    const playerPos = query_position(current_player);
+    const left  = input_key_down("a");
+    const right = input_key_down("d");
+    let moving = left || right;
+    
+    if (left && !facing_left)
+    {
+        facing_left = true;
+        set_sprite_direction(player_frames, true);
+    } else if (right && facing_left) 
+    {
+        facing_left = false;
+        set_sprite_direction(player_frames, false);
+    }
+   
     if (input_key_down("a")) {
         playerPos[0] = playerPos[0] - PLAYER_MOVE_SPEED;
     }
     if (input_key_down("d")) {
         playerPos[0] = playerPos[0] + PLAYER_MOVE_SPEED;
+    }
+    if (moving) {
+        frame_counter = frame_counter + 1;
+        if (frame_counter >= FRAME_DELAY) {
+            frame_counter = 0;
+            player_frame_index = player_frame_index + 1;
+            if (player_frame_index > 3) {
+                player_frame_index = 1; // idle = 0; running = 1 ~ 3
+            }
+        }
+    } else {
+        player_frame_index = 0;
+        frame_counter = 0;
     }
     if(!on_object){
         velocityY = velocityY + GRAVITY;
@@ -90,18 +154,20 @@ update_loop(game_state => {
     }
    if (input_key_down("s") && on_object) {
         if (!isCrouching) {
-            update_scale(player, [1, 0.5]);
+            update_scale(current_player, [1, 0.5]);
             playerPos[1] = playerPos[1] + PLAYER_HEIGHT/2;
             isCrouching = true;
         }
     } 
     else if (isCrouching) {
-        update_scale(player, [1, 1]);
+        update_scale(current_player, [1, 1]);
         playerPos[1] = playerPos[1] - PLAYER_HEIGHT/2;
         isCrouching = false;
     }
     debug_log("jump check");
-    debug_log("on_object check: "+ stringify(on_object));
+    debug_log("on_object check: " + stringify(on_object));
+    debug_log("jump check");
+    debug_log("on_object check: " + stringify(on_object));
     const currentPlayerHeight = isCrouching ? PLAYER_HEIGHT/2 : PLAYER_HEIGHT;
    // Update GameObjects within update_loop(...)
    let on_object_check=0;
@@ -219,7 +285,7 @@ update_loop(game_state => {
         }
     }
     else if(trapSequence===8){
-        for(let i = 2; i < 13;i = i + 1){
+        for(let i = 2; i < 13; i = i + 1){
             update_position(game_traps[i], [query_position(game_traps[i])[0], query_position(game_traps[i])[1] - SPIKES_MOVE_SPEED]);
         }
         if(query_position(game_traps[10])[1] !== 265){
@@ -259,27 +325,30 @@ update_loop(game_state => {
         update_position(game_solids[1],[175,query_position(game_solids[1])[1]-SPIKES_MOVE_SPEED * 1.35]);
     }
     //Getting Ready for next loop
-    if (gameobjects_overlap(player, transportDoor))
+
+    if (gameobjects_overlap(current_player, transportDoor))
     {
         playerPos[0] = 70;
         playerPos[1] = 300;
     }
     
-    update_position(player, playerPos); // Still update after push
-    if (tryjump) {
-        tryjump=false;
+    update_sprite(player_frames, player_frame_index, playerPos); // Still update after push
+    if (tryjump) 
+    {
+        tryjump = false;
     }
     
-    for(let i=0;i<20;i=i+1){
-        if (gameobjects_overlap(player, game_traps[i]) || gameobjects_overlap(player, gear_traps[i])) {
+    for(let i = 0;i < 20;i = i + 1)
+    {
+        if (gameobjects_overlap(current_player, game_traps[i]) || gameobjects_overlap(current_player, gear_traps[i])) {
             update_text(collision_happened, "Game Over!");
             alive = false;
         }
     }
     
-    if (gameobjects_overlap(player, door))
+    if (gameobjects_overlap(current_player, door))
     {
-        update_position(player, [30, 300]);
+        update_position(current_player, [30, 300]);
         update_text(collision_happened, "Next level");
         alive = false;
     }
@@ -287,6 +356,6 @@ update_loop(game_state => {
     debug_log("game_solids[0] pos: "+stringify(query_position(game_solids[0])));
     debug_log("game_solids[6] pos: "+stringify(query_position(game_solids[6])));
     debug_log("door position: "+stringify(query_position(door)));
-   debug_log("player position:"+stringify(query_position(player)));
+    // debug_log("player position:"+stringify(query_position(player)));
 });
 build_game();
